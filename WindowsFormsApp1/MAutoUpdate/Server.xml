@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ServerUpdate>
+  <item>
+    <ApplicationStart>ServiceInstaller.exe</ApplicationStart>
+    <AppName>ServiceInstaller</AppName>
+    <MinVersion>1.0.0.0</MinVersion>
+    <ReleaseDate>2024/3/7 9:25:24</ReleaseDate>
+    <ReleaseUrl>http://192.168.0.227:6600/WebApp/update/1.0.0.3.zip</ReleaseUrl>
+    <ReleaseVersion>1.0.0.2</ReleaseVersion>
+    <VersionDesc>1、TEST$2、TEST11$3、TEST333</VersionDesc>
+    <UpdateMode>Increment</UpdateMode>
+  </item>
+</ServerUpdate>

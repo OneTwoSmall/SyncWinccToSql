@@ -1,0 +1,242 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="VisitAppModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="T_ClassSet">
+          <Key>
+            <PropertyRef Name="PsnName" />
+            <PropertyRef Name="ClassDate" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="PsnName" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="ClassDate" Type="date" Nullable="false" />
+          <Property Name="ClassType" Type="nvarchar" MaxLength="50" />
+          <Property Name="ClassMaster" Type="nvarchar" MaxLength="50" />
+          <Property Name="WorkRoom" Type="nvarchar" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="T_DeviceInfo">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="DeviceNum" Type="int" />
+          <Property Name="OperationRate" Type="decimal" Precision="18" Scale="2" />
+          <Property Name="YearMonth" Type="date" />
+          <Property Name="WorkRoom" Type="nvarchar" MaxLength="50" />
+          <Property Name="Remark" Type="nvarchar" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="T_HolidayDuty">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="PsnId" Type="nchar" MaxLength="10" />
+          <Property Name="PsnName" Type="nvarchar" MaxLength="50" />
+          <Property Name="Pic" Type="image" />
+          <Property Name="StartTime" Type="date" />
+          <Property Name="EndTime" Type="date" />
+        </EntityType>
+        <EntityType Name="T_OuterWorkder">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" Nullable="false" />
+          <Property Name="Company" Type="nvarchar" MaxLength="50" />
+          <Property Name="ResponsePsn" Type="nvarchar" MaxLength="50" />
+          <Property Name="Contact" Type="nvarchar" MaxLength="50" />
+          <Property Name="Count" Type="int" />
+          <Property Name="WorkContent" Type="nvarchar" MaxLength="150" />
+          <Property Name="StartTime" Type="date" />
+          <Property Name="EndTime" Type="date" />
+          <Property Name="WorkRoom" Type="nvarchar" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="T_PersonBasic">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" Nullable="false" />
+          <Property Name="PsnName" Type="nvarchar" MaxLength="50" />
+          <Property Name="PsnPic" Type="image" />
+          <Property Name="Contact" Type="nvarchar" MaxLength="50" />
+          <Property Name="WorkRoom" Type="nvarchar" MaxLength="50" />
+        </EntityType>
+        <Function Name="P_GetKaiGongCount" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="startTime" Type="datetime" Mode="In" />
+          <Parameter Name="endTime" Type="datetime" Mode="In" />
+        </Function>
+        <EntityContainer Name="VisitAppModelStoreContainer">
+          <EntitySet Name="T_ClassSet" EntityType="Self.T_ClassSet" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="T_DeviceInfo" EntityType="Self.T_DeviceInfo" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="T_HolidayDuty" EntityType="Self.T_HolidayDuty" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="T_OuterWorkder" EntityType="Self.T_OuterWorkder" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="T_PersonBasic" EntityType="Self.T_PersonBasic" Schema="dbo" store:Type="Tables" />
+        </EntityContainer>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="VisitAppModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityType Name="T_PersonBasic">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" />
+          <Property Name="PsnName" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="PsnPic" Type="Binary" MaxLength="Max" FixedLength="false" />
+          <Property Name="Contact" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="WorkRoom" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityContainer Name="VisitAppEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="T_PersonBasic" EntityType="Self.T_PersonBasic" />
+          <EntitySet Name="T_HolidayDuty" EntityType="VisitAppModel.T_HolidayDuty" />
+          <EntitySet Name="T_OuterWorkder" EntityType="VisitAppModel.T_OuterWorkder" />
+          <EntitySet Name="T_ClassSet" EntityType="VisitAppModel.T_ClassSet" />
+          <FunctionImport Name="P_GetKaiGongCount">
+            <Parameter Name="startTime" Mode="In" Type="DateTime" />
+            <Parameter Name="endTime" Mode="In" Type="DateTime" />
+          </FunctionImport>
+          <EntitySet Name="T_DeviceInfo" EntityType="VisitAppModel.T_DeviceInfo" />
+        </EntityContainer>
+        <EntityType Name="T_HolidayDuty">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="PsnId" Type="String" MaxLength="10" FixedLength="true" Unicode="true" />
+          <Property Name="PsnName" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="Pic" Type="Binary" MaxLength="Max" FixedLength="false" />
+          <Property Name="StartTime" Type="DateTime" Precision="0" />
+          <Property Name="EndTime" Type="DateTime" Precision="0" />
+        </EntityType>
+        <EntityType Name="T_OuterWorkder">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" />
+          <Property Name="Company" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="ResponsePsn" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="Contact" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="Count" Type="Int32" />
+          <Property Name="WorkContent" Type="String" MaxLength="150" FixedLength="false" Unicode="true" />
+          <Property Name="StartTime" Type="DateTime" Precision="0" />
+          <Property Name="EndTime" Type="DateTime" Precision="0" />
+          <Property Name="WorkRoom" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="T_ClassSet">
+          <Key>
+            <PropertyRef Name="PsnName" />
+            <PropertyRef Name="ClassDate" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="PsnName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="ClassDate" Type="DateTime" Nullable="false" Precision="0" />
+          <Property Name="ClassType" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="ClassMaster" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="WorkRoom" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="T_DeviceInfo">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="DeviceNum" Type="Int32" />
+          <Property Name="OperationRate" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="YearMonth" Type="DateTime" Precision="0" />
+          <Property Name="WorkRoom" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="Remark" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+        </EntityType>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="VisitAppModelStoreContainer" CdmEntityContainer="VisitAppEntities">
+          <EntitySetMapping Name="T_PersonBasic">
+            <EntityTypeMapping TypeName="VisitAppModel.T_PersonBasic">
+              <MappingFragment StoreEntitySet="T_PersonBasic">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="PsnName" ColumnName="PsnName" />
+                <ScalarProperty Name="PsnPic" ColumnName="PsnPic" />
+                <ScalarProperty Name="Contact" ColumnName="Contact" />
+                <ScalarProperty Name="WorkRoom" ColumnName="WorkRoom" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="T_HolidayDuty">
+            <EntityTypeMapping TypeName="VisitAppModel.T_HolidayDuty">
+              <MappingFragment StoreEntitySet="T_HolidayDuty">
+                <ScalarProperty Name="EndTime" ColumnName="EndTime" />
+                <ScalarProperty Name="StartTime" ColumnName="StartTime" />
+                <ScalarProperty Name="Pic" ColumnName="Pic" />
+                <ScalarProperty Name="PsnName" ColumnName="PsnName" />
+                <ScalarProperty Name="PsnId" ColumnName="PsnId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="T_OuterWorkder">
+            <EntityTypeMapping TypeName="VisitAppModel.T_OuterWorkder">
+              <MappingFragment StoreEntitySet="T_OuterWorkder">
+                <ScalarProperty Name="WorkRoom" ColumnName="WorkRoom" />
+                <ScalarProperty Name="EndTime" ColumnName="EndTime" />
+                <ScalarProperty Name="StartTime" ColumnName="StartTime" />
+                <ScalarProperty Name="WorkContent" ColumnName="WorkContent" />
+                <ScalarProperty Name="Count" ColumnName="Count" />
+                <ScalarProperty Name="Contact" ColumnName="Contact" />
+                <ScalarProperty Name="ResponsePsn" ColumnName="ResponsePsn" />
+                <ScalarProperty Name="Company" ColumnName="Company" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="T_ClassSet">
+            <EntityTypeMapping TypeName="VisitAppModel.T_ClassSet">
+              <MappingFragment StoreEntitySet="T_ClassSet">
+                <ScalarProperty Name="WorkRoom" ColumnName="WorkRoom" />
+                <ScalarProperty Name="ClassMaster" ColumnName="ClassMaster" />
+                <ScalarProperty Name="ClassType" ColumnName="ClassType" />
+                <ScalarProperty Name="ClassDate" ColumnName="ClassDate" />
+                <ScalarProperty Name="PsnName" ColumnName="PsnName" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <FunctionImportMapping FunctionImportName="P_GetKaiGongCount" FunctionName="VisitAppModel.Store.P_GetKaiGongCount" />
+          <EntitySetMapping Name="T_DeviceInfo">
+            <EntityTypeMapping TypeName="VisitAppModel.T_DeviceInfo">
+              <MappingFragment StoreEntitySet="T_DeviceInfo">
+                <ScalarProperty Name="Remark" ColumnName="Remark" />
+                <ScalarProperty Name="WorkRoom" ColumnName="WorkRoom" />
+                <ScalarProperty Name="YearMonth" ColumnName="YearMonth" />
+                <ScalarProperty Name="OperationRate" ColumnName="OperationRate" />
+                <ScalarProperty Name="DeviceNum" ColumnName="DeviceNum" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="false" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="False" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="无" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>
