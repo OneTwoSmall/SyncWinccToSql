@@ -47,6 +47,7 @@
             this.btn_ManuSync = new System.Windows.Forms.Button();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripExit = new System.Windows.Forms.ToolStripButton();
+            this.button4 = new System.Windows.Forms.Button();
             this.statusStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -233,11 +234,23 @@
             this.toolStripExit.Text = "退出程序";
             this.toolStripExit.Click += new System.EventHandler(this.toolStripExit_Click);
             // 
+            // button4
+            // 
+            this.button4.Location = new System.Drawing.Point(599, 263);
+            this.button4.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(97, 57);
+            this.button4.TabIndex = 24;
+            this.button4.Text = "读取实时值(读一次)";
+            this.button4.UseVisualStyleBackColor = true;
+            this.button4.Click += new System.EventHandler(this.button4_Click_1);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(727, 607);
+            this.Controls.Add(this.button4);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.btn_ManuSync);
             this.Controls.Add(this.btn_StartSync);
@@ -284,6 +297,7 @@
         private System.Windows.Forms.Button btn_ManuSync;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton toolStripExit;
+        private System.Windows.Forms.Button button4;
     }
 }
 

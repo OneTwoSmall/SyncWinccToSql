@@ -101,7 +101,10 @@ namespace ServiceInstaller
         public static void SetWinccConnectionString()
         {
             //初始化wincc接口参数
-            HMIRuntime hmiRuntime = new HMIRuntime();
+            if (hmiRuntime==null)
+            {
+                hmiRuntime = new HMIRuntime();
+            }
             string winccSqlServerName = hmiRuntime.Tags["@DatasourceNameRT"].Read();
             string winccPcName = hmiRuntime.Tags["@ServerName"].Read();
 
@@ -650,7 +653,7 @@ namespace ServiceInstaller
 
         CancellationTokenSource oleDbHelperCancelTokenSource = new CancellationTokenSource();
 
-        private void ReadRealValue()
+        private void ReadRealValue(bool debugFlag = false)
         {
             try
             {
@@ -659,8 +662,16 @@ namespace ServiceInstaller
                 {
                     return;
                 }
+                if (debugFlag)
+                {
+                    LoadSyncInfo("是否读取实时值：" + syncCount);
+
+                }
                 SqlHelper.connectionString = _sqlConnectString;
-                hmiRuntime = new HMIRuntime();
+                if (hmiRuntime == null)
+                {
+                    hmiRuntime = new HMIRuntime();
+                }
                 //获取需要实时读取的变量的值
                 var realvalueTable = SqlHelper.ExecuteDataSet(_sqlConnectString, CommandType.Text, "Select * from RealValue", null);
                 if (realvalueTable == null || realvalueTable.Tables.Count == 0)
@@ -671,17 +682,28 @@ namespace ServiceInstaller
                 }
                 var archiveDt = (DataTable)realvalueTable.Tables[0];
                 //读取wincc变量表所有valueid
+                LoadSyncInfo("读取实时值：" + hmiRuntime.Tags["@DatasourceNameRT"].Read());
                 foreach (DataRow dr in archiveDt.Rows)
                 {
                     try
                     {
                         var tagName = dr["ValueName"] + "";
+                        if (debugFlag)
+                        {
+                            LoadSyncInfo("读取实时值：" + tagName);
+                            LoadSyncInfo("读取实时值：" + hmiRuntime.Tags[tagName].Read() + "");
+                           
+                        }
+
                         dr["RealValue"] = hmiRuntime.Tags[tagName].Read() + "";
                         dr["SyncTime"] = DateTime.Now;
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-
+                        if (debugFlag)
+                        {
+                            MessageBox.Show(ex.ToString());
+                        }
                         continue;
                     }
                 }
@@ -690,6 +712,11 @@ namespace ServiceInstaller
             }
             catch (Exception ex)//异常但是不用抛出
             {
+
+                if (debugFlag)
+                {
+                    MessageBox.Show(ex.ToString());
+                }
                 //log异常现象
             }
 
@@ -917,6 +944,11 @@ namespace ServiceInstaller
             {
                 Application.ExitThread();
             }
+        }
+
+        private void button4_Click_1(object sender, EventArgs e)
+        {
+            ReadRealValue(true);
         }
     }
 
