@@ -160,7 +160,7 @@
             this.txt_Info.Name = "txt_Info";
             this.txt_Info.Size = new System.Drawing.Size(439, 545);
             this.txt_Info.TabIndex = 17;
-            this.txt_Info.Text = "安装服务前请先初始化。。。";
+            this.txt_Info.Text = "第一次启动请先初始化。。。";
             // 
             // button5
             // 

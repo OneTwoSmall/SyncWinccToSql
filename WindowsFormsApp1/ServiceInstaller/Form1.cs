@@ -98,11 +98,16 @@ namespace ServiceInstaller
             LoadServiceState("已安装");
         }
 
-        public static void SetWinccConnectionString()
+        public static void SetWinccConnectionString(bool forseInit = false)
         {
             //初始化wincc接口参数
-            if (hmiRuntime==null)
+            if (hmiRuntime == null)
             {
+                hmiRuntime = new HMIRuntime();
+            }
+            if (forseInit)
+            {
+                hmiRuntime = null;
                 hmiRuntime = new HMIRuntime();
             }
             string winccSqlServerName = hmiRuntime.Tags["@DatasourceNameRT"].Read();
@@ -273,6 +278,9 @@ namespace ServiceInstaller
             if (this.IsServiceExisted(serviceName))
                 await UninstallService(servicePath);
             LoadServiceState(GetServiceState(serviceName));
+
+
+            btn_StartSync_Click(sender, e);//点击
         }
 
         private string GetServiceState(string sname)
@@ -486,7 +494,6 @@ namespace ServiceInstaller
                 if (proc != null)
                 {
                     proc.WaitForExit();
-
                 }
             }
             ;
@@ -591,7 +598,7 @@ namespace ServiceInstaller
         /// <param name="e"></param>
         private void reSyncTimer_Tick(object sender, EventArgs e)
         {
-            Init();
+            SetWinccConnectionString(true);
         }
         object lockObj = new object();
         /// <summary>
@@ -652,9 +659,23 @@ namespace ServiceInstaller
         }
 
         CancellationTokenSource oleDbHelperCancelTokenSource = new CancellationTokenSource();
+        public bool WinccRunning()
+        {
+            var runStatus = hmiRuntime.Tags["@DatasourceNameRT"].Read() + "";
+            if (string.IsNullOrEmpty(runStatus))
+            {
+                return false;
+            }
+            return true;
 
+        }
         private void ReadRealValue(bool debugFlag = false)
         {
+            if (!WinccRunning())
+            {
+                LoadSyncInfo("Wincc没有运行，请检查");
+                return;
+            }
             try
             {
                 var syncCount = INIHelper.ReadBoolean("Wincc归档设置", "实时读取", false, _iniSettingFilePath);
@@ -682,7 +703,7 @@ namespace ServiceInstaller
                 }
                 var archiveDt = (DataTable)realvalueTable.Tables[0];
                 //读取wincc变量表所有valueid
-                LoadSyncInfo("读取实时值：" + hmiRuntime.Tags["@DatasourceNameRT"].Read());
+                LoadSyncInfo("读取实时值DatasourceNameRT：" + hmiRuntime.Tags["@DatasourceNameRT"].Read());
                 foreach (DataRow dr in archiveDt.Rows)
                 {
                     try
@@ -692,7 +713,7 @@ namespace ServiceInstaller
                         {
                             LoadSyncInfo("读取实时值：" + tagName);
                             LoadSyncInfo("读取实时值：" + hmiRuntime.Tags[tagName].Read() + "");
-                           
+
                         }
 
                         dr["RealValue"] = hmiRuntime.Tags[tagName].Read() + "";
@@ -723,6 +744,11 @@ namespace ServiceInstaller
         }
         public void ReadWinccArchiveHis()
         {
+            if (!WinccRunning())
+            {
+                LoadSyncInfo("Wincc没有运行，请检查");
+                return;
+            }
             try
             {
                 LogHelper.WriteLog("开始同步数据Wincc数据");
@@ -812,7 +838,6 @@ namespace ServiceInstaller
             }
             catch (Exception ex)
             {
-
                 LogHelper.ErrorLog("同步数据Wincc数据失败", ex);
                 LoadSyncInfo("同步数据Wincc数据失败" + ex);
             }
@@ -928,6 +953,8 @@ namespace ServiceInstaller
             isd.ShowDialog();
             //Thread.Sleep(10000);
             //服务启动时，直接执行语句
+            LoadSyncInfo("手工执行:");
+
             if (Init())
             {
                 Task.Run(() => ReadWinccArchiveHis());
@@ -935,7 +962,7 @@ namespace ServiceInstaller
                 Task.Run(() => ReadRealValue());
 
             }
-            LoadSyncInfo("手工执行完成");
+
         }
 
         private void toolStripExit_Click(object sender, EventArgs e)
