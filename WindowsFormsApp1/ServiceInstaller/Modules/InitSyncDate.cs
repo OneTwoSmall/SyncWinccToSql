@@ -15,17 +15,27 @@ namespace ServiceInstaller.Modules
 
         private void InitSyncDate_Load(object sender, EventArgs e)
         {
-            startDateT.Value = DateTime.Now.AddDays(-1);
-            endDataT.Value = DateTime.Now;
+            DateTime now = DateTime.Now;
+            startDateT.Value = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0); ;
+            endDataT.Value = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0); ;
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
 
-            INIHelper.WriteString("Wincc归档设置", "manualStartTime", startDateT.Value.ToString("yyyy-MM-dd"), _iniSettingFilePath);
-            INIHelper.WriteString("Wincc归档设置", "manualEndTime", endDataT.Value.ToString("yyyy-MM-dd"), _iniSettingFilePath);
+            INIHelper.WriteString("Wincc归档设置", "manualStartTime", startDateT.Value.ToString("yyyy-MM-dd HH:mm:00"), _iniSettingFilePath);
+            INIHelper.WriteString("Wincc归档设置", "manualEndTime", endDataT.Value.ToString("yyyy-MM-dd HH:mm:00"), _iniSettingFilePath);
 
             this.DialogResult = DialogResult.OK;
+            this.Close();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            INIHelper.WriteString("Wincc归档设置", "manualStartTime", "", _iniSettingFilePath);
+            INIHelper.WriteString("Wincc归档设置", "manualEndTime", "", _iniSettingFilePath);
+
+            this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
     }

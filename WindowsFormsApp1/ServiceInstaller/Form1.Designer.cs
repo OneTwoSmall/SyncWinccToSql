@@ -160,7 +160,7 @@
             this.txt_Info.Name = "txt_Info";
             this.txt_Info.Size = new System.Drawing.Size(439, 545);
             this.txt_Info.TabIndex = 17;
-            this.txt_Info.Text = "第一次启动请先初始化。。。";
+            this.txt_Info.Text = "第一次启动请先初始化。。。\r\n/******/\r\n确认配置无误后，点击启动任务\r\n\r\n下次程序启动时会自动启动任务\r\n/******/";
             // 
             // button5
             // 
@@ -223,6 +223,7 @@
             this.toolStrip1.Size = new System.Drawing.Size(727, 27);
             this.toolStrip1.TabIndex = 23;
             this.toolStrip1.Text = "toolStrip1";
+            this.toolStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.toolStrip1_ItemClicked);
             // 
             // toolStripExit
             // 

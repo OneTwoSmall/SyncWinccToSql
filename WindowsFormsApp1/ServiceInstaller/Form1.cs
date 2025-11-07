@@ -21,6 +21,7 @@ using CommonClass.Helper;
 using DBHelpClass.Helper;
 using System.Linq;
 using System.Data;
+using System.Runtime.ExceptionServices;
 namespace ServiceInstaller
 {
     public partial class Form1 : Form
@@ -279,8 +280,11 @@ namespace ServiceInstaller
                 await UninstallService(servicePath);
             LoadServiceState(GetServiceState(serviceName));
 
-
-            btn_StartSync_Click(sender, e);//点击
+            var initState = INIHelper.ReadBoolean("Wincc归档设置", "初始化", false, _iniSettingFilePath);
+            if (initState)
+            {
+                btn_StartSync_Click(sender, e);//点击
+            }
         }
 
         private string GetServiceState(string sname)
@@ -602,35 +606,35 @@ namespace ServiceInstaller
         }
         object lockObj = new object();
         /// <summary>
-        /// 同步变量定时器
+        /// 同步变量定时器(每天同步，废弃)
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void timer1_Tick(object sender, EventArgs e)
         {
-            try
-            {
-                if (DateTime.Now.Hour == 1 && syncFlag)
-                {
-                    lock (lockObj)
-                    {
-                        LogHelper.WriteLog("开始同步前一天历史数据");
-                        ReadWinccArchiveHis();
-                        LogHelper.WriteLog("结束同步");
-                    }
-                    syncFlag = false;
-                }
-                if (DateTime.Now.Hour != 1)
-                {
-                    syncFlag = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                timer1.Stop();
-                LogHelper.WriteLog("同步出错:" + ex.Message);
-                Init();
-            }
+            //try
+            //{
+            //    if (DateTime.Now.Hour == 1 && syncFlag)
+            //    {
+            //        lock (lockObj)
+            //        {
+            //            LogHelper.WriteLog("开始同步历史数据");
+            //            ReadWinccArchiveHis();
+            //            LogHelper.WriteLog("结束同步");
+            //        }
+            //        syncFlag = false;
+            //    }
+            //    if (DateTime.Now.Hour != 1)
+            //    {
+            //        syncFlag = true;
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    timer1.Stop();
+            //    LogHelper.WriteLog("同步出错:" + ex.Message);
+            //    Init();
+            //}
         }
 
         /// <summary>
@@ -641,6 +645,7 @@ namespace ServiceInstaller
         private void btn_StartSync_Click(object sender, EventArgs e)
         {
             OnStart();
+            INIHelper.WriteBoolean("Wincc归档设置", "初始化", true, _iniSettingFilePath);
         }
         public void OnStart()
         {
@@ -653,6 +658,9 @@ namespace ServiceInstaller
                 realSyncTimer.Interval = 5 * 60 * 1000;//5分钟读取实际值
                 realSyncTimer.Elapsed += RealSyncTimer_Elapsed;
                 realSyncTimer.Start();//出错后重试
+                //开始每小时同步任务
+                LoadSyncInfo("开始每小时定时任务...");
+                ScheduleNextExecution();
             }
             LoadServiceState("运行中...");
             btn_StartSync.Enabled = false;
@@ -661,14 +669,23 @@ namespace ServiceInstaller
         CancellationTokenSource oleDbHelperCancelTokenSource = new CancellationTokenSource();
         public bool WinccRunning()
         {
+            if (hmiRuntime == null)
+            {
+                hmiRuntime = new HMIRuntime();
+            }
             var runStatus = hmiRuntime.Tags["@DatasourceNameRT"].Read() + "";
             if (string.IsNullOrEmpty(runStatus))
             {
+                {
+                    hmiRuntime = null;
+                    hmiRuntime = new HMIRuntime();
+                }
                 return false;
             }
             return true;
 
         }
+        [HandleProcessCorruptedStateExceptions]
         private void ReadRealValue(bool debugFlag = false)
         {
             if (!WinccRunning())
@@ -742,7 +759,7 @@ namespace ServiceInstaller
             }
 
         }
-        public void ReadWinccArchiveHis()
+        public void ReadWinccArchiveHis(DateTime? startTime = null, DateTime? endTime = null)
         {
             if (!WinccRunning())
             {
@@ -755,8 +772,7 @@ namespace ServiceInstaller
                 LoadSyncInfo("开始同步数据Wincc数据");
                 var startString = INIHelper.ReadString("Wincc归档设置", "manualStartTime", "", _iniSettingFilePath);
                 var endtString = INIHelper.ReadString("Wincc归档设置", "manualEndTime", "", _iniSettingFilePath);
-                DateTime? startTime = null;
-                DateTime? endTime = null;
+             
                 if (!string.IsNullOrEmpty(startString))
                 {
                     startTime = Convert.ToDateTime(startString);
@@ -798,16 +814,17 @@ namespace ServiceInstaller
                 totalPages = (int)Math.Ceiling((valueIdList.Count() / pageSize * 1M));
 
                 //默认只获取前一整天 的历史数据 如有缺失 需要手动同步
-                var foreDay_s = Convert.ToDateTime(DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd"));
-                var foreDay_e = Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd"));
+                DateTime foreDay_s = Convert.ToDateTime(DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd"));
+                DateTime foreDay_e = Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd"));
                 if (startTime != null && endTime != null)
                 {
                     foreDay_s = startTime.Value;
                     foreDay_e = endTime.Value;
                 }
-                LoadSyncInfo($"开始同步[{foreDay_s:yy-MM-dd}]-[{foreDay_e:yy-MM-dd}]间的数据");
+                LoadSyncInfo($"开始同步[{foreDay_s:yy-MM-dd HH:mm}]-[{foreDay_e:yy-MM-dd HH:mm}]间的数据");
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
+                int totalSyncCount = 0;
                 //for 重新每10个valueid,查询一次
                 for (int i = 0; i < totalPages; i++)
                 {
@@ -823,6 +840,7 @@ namespace ServiceInstaller
                     {
                         SqlHelper.SqlBulkCopyByDatatable("CurrentDayData", dealDt);
                         LogHelper.WriteLog($"本次写入{dealDt.Rows.Count}条记录");
+                        totalSyncCount += dealDt.Rows.Count;
                     }
                     //取消任务时 终止循环
                     if (oleDbHelperCancelTokenSource.IsCancellationRequested)
@@ -830,6 +848,7 @@ namespace ServiceInstaller
                         break;
                     }
                 }
+                LoadSyncInfo($"写入{totalSyncCount}条记录");
                 //服务启动执行完成后，把时间写为空，后面每天执行时同步数据即可
                 INIHelper.WriteString("Wincc归档设置", "manualStartTime", "", _iniSettingFilePath);
                 INIHelper.WriteString("Wincc归档设置", "manualEndTime", "", _iniSettingFilePath);
@@ -855,7 +874,7 @@ namespace ServiceInstaller
             DataTable dt = null;
             //wincc存储时间为 utc 0 区时间   查询时 需要处理一下  - 8 Hours
             var sqlUpit1 =
-                $"Tag:R,({valueIds}),'{st.AddHours(-8).AddSeconds(1):yyyy-MM-dd HH:mm:ss.fff}','{et.Date.AddHours(-8):yyyy-MM-dd HH:mm:ss.fff}'"; //0000-00-00 00:00:00.000
+                $"Tag:R,({valueIds}),'{st.AddHours(-8).AddSeconds(1):yyyy-MM-dd HH:mm:ss.fff}','{et.AddHours(-8):yyyy-MM-dd HH:mm:ss.fff}'"; //0000-00-00 00:00:00.000
             try
             {
                 //Task.Run(() => oleDbHelper.QueryTest(sqlUpit1, cancellationToken, winccVersion)); //获取查询变量的结果集
@@ -863,6 +882,14 @@ namespace ServiceInstaller
                 if (winccDataSet.Tables.Count > 0 && winccDataSet.Tables[0].Rows.Count > 0)
                 {
                     var dealDt = CommonClass.Helper.WinccHandleHelper.SwapTable(winccDataSet.Tables[0], _winccVersion);
+                    foreach (DataRow row in dealDt.Rows)
+                    {
+                        if (!row.IsNull("Timestamp"))  // 确保列非空
+                        {
+                            DateTime currentTime = (DateTime)row["Timestamp"];
+                            row["Timestamp"] = currentTime.AddHours(8);  // +8 小时，转换为 UTC+8
+                        }
+                    }
                     dt = dealDt;
                 }
             }
@@ -951,17 +978,22 @@ namespace ServiceInstaller
         {
             InitSyncDate isd = new InitSyncDate();
             isd.ShowDialog();
-            //Thread.Sleep(10000);
-            //服务启动时，直接执行语句
-            LoadSyncInfo("手工执行:");
-
-            if (Init())
+            if (isd.DialogResult == DialogResult.OK)
             {
-                Task.Run(() => ReadWinccArchiveHis());
-                //读取实时变量
-                Task.Run(() => ReadRealValue());
+                //Thread.Sleep(10000);
+                //服务启动时，直接执行语句
+                LoadSyncInfo("手工执行:");
 
+                if (Init())
+                {
+                    //读取实时变量
+                    Task.Run(() => ReadRealValue());
+
+                    Task.Run(() => ReadWinccArchiveHis());
+
+                }
             }
+
 
         }
 
@@ -976,6 +1008,82 @@ namespace ServiceInstaller
         private void button4_Click_1(object sender, EventArgs e)
         {
             ReadRealValue(true);
+        }
+
+
+
+        #region 每小时定时运行
+
+        private static System.Threading.Timer _timer;
+        private static Random _random = new Random();
+        private static DateTime _nextExecutionTime;
+
+        /// <summary>
+        /// 调度下一次执行时间：每个小时 10-50 分钟随机点
+        /// </summary>
+        private void ScheduleNextExecution()
+        {
+            DateTime now = DateTime.Now;
+
+            // 计算当前小时的起始时间
+            DateTime currentHourStart = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0);
+
+            // 修改点：直接计算下一个小时起始时间（自动处理跨天）
+            DateTime nextHourStart = currentHourStart.AddHours(1);
+
+            // 生成随机偏移（60-301 秒）
+            int randomSeconds = _random.Next(60, 301);
+            _nextExecutionTime = nextHourStart.AddSeconds(randomSeconds);
+
+            TimeSpan delay = _nextExecutionTime - now;
+            if (_timer != null)
+            {
+                _timer.Dispose();
+            }
+            // 通过 state 参数传递小时起始时间至回调
+            _timer = new System.Threading.Timer(TimerCallback, nextHourStart, delay, Timeout.InfiniteTimeSpan); // 单次触发，手动更新
+        }
+
+        /// <summary>
+        /// 定时器回调：执行任务并调度下一小时
+        /// </summary>
+        private void TimerCallback(object state)
+        {
+            try
+            {
+                DateTime hourStartTime = (DateTime)state;
+                ExecuteTask(hourStartTime.AddHours(-1), hourStartTime);
+                LoadSyncInfo($"任务执行完成，时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss} (小时: {DateTime.Now.Hour}, 分钟: {DateTime.Now.Minute})");
+            }
+            catch (Exception ex)
+            {
+                LoadSyncInfo($"任务执行异常: {ex.Message}");
+            }
+            finally
+            {
+                // 立即调度下一小时的随机执行（10-50 分钟范围）
+                ScheduleNextExecution();
+                LoadSyncInfo($"下次执行时间: {_nextExecutionTime:yyyy-MM-dd HH:mm:ss} (小时: {_nextExecutionTime.Hour}, 分钟: {_nextExecutionTime.Minute})");
+            }
+        }
+
+        /// <summary>
+        /// 要执行的任务（自定义逻辑）
+        /// </summary>开始同步[
+        private void ExecuteTask(DateTime st, DateTime et)
+        {
+
+            Task.Run(() => ReadWinccArchiveHis(st, et));
+
+            // 示例任务：输出当前时间
+            Console.WriteLine("执行自定义任务...");
+            // 在此处添加您的业务逻辑，例如定时报告生成或数据备份
+        }
+        #endregion
+
+        private void toolStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+
         }
     }
 
