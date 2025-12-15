@@ -826,7 +826,7 @@ namespace ServiceInstaller
                 sw.Start();
                 int totalSyncCount = 0;
                 //for 重新每10个valueid,查询一次
-                for (int i = 0; i < totalPages; i++)
+                for (int i = 0; i <= totalPages; i++)
                 {
                     var partIds = valueIdList.Skip((i) * pageSize).Take(pageSize);
                     var splitids = string.Join(";", partIds);
